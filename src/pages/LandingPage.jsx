@@ -1,0 +1,5 @@
+import BrandMark from '../components/BrandMark'
+
+export default function LandingPage({ onLogin }) {
+  return <main className="landing-page"><header><BrandMark /><button onClick={onLogin} type="button">Staff login</button></header><section><div><p>SECURITY MADE CLEAR FOR SCHOOLS</p><h1>Know what needs your attention.</h1><h2>School CyberWatch gives ICT staff one calm place to understand security activity and respond with confidence.</h2><button onClick={onLogin} type="button">Access your workspace →</button></div><aside><span>School CyberWatch</span><strong>Security monitoring for your school.</strong><i /><i /><i /></aside></section><footer><article><b>01</b><h3>One clear view</h3><p>Bring important security information into one familiar workspace.</p></article><article><b>02</b><h3>Plain language</h3><p>Understand what happened without advanced security expertise.</p></article><article><b>03</b><h3>Made for schools</h3><p>Support safer learning environments with focused monitoring.</p></article></footer></main>
+}

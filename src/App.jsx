@@ -1,41 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import AppShell from './components/AppShell'
-import PlaceholderPage from './pages/PlaceholderPage'
+import DashboardPage from './pages/DashboardPage'
+import LandingPage from './pages/LandingPage'
+import LoginPage from './pages/LoginPage'
 
-const pages = {
-  dashboard: {
-    eyebrow: 'School CyberWatch',
-    title: 'Security overview',
-    description: 'Your school security summary will appear here once the dashboard service is connected.',
-  },
-  computers: {
-    eyebrow: 'Monitoring',
-    title: 'Computers',
-    description: 'Connected computers and their Wazuh agent status will appear here.',
-  },
-  alerts: {
-    eyebrow: 'Detection',
-    title: 'Security alerts',
-    description: 'Alerts from the backend will appear here with simple filters and clear severity labels.',
-  },
-  incidents: {
-    eyebrow: 'Response',
-    title: 'Incidents',
-    description: 'Your incident list and investigation workflow will appear here.',
-  },
-  reports: {
-    eyebrow: 'Reporting',
-    title: 'Reports',
-    description: 'Generate and download security reports from this page once reporting is connected.',
-  },
-}
+const pageFromHash = () => window.location.hash.replace('#/', '') || 'landing'
 
 export default function App() {
-  const [activePage, setActivePage] = useState('dashboard')
-
-  return (
-    <AppShell activePage={activePage} onNavigate={setActivePage}>
-      <PlaceholderPage {...pages[activePage]} />
-    </AppShell>
-  )
+  const [page, setPage] = useState(pageFromHash)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  useEffect(() => { const updatePage = () => setPage(pageFromHash()); window.addEventListener('hashchange', updatePage); return () => window.removeEventListener('hashchange', updatePage) }, [])
+  const navigate = (nextPage) => { window.location.hash = `/${nextPage}` }
+  const signIn = () => { setIsAuthenticated(true); navigate('dashboard') }
+  const signOut = () => { setIsAuthenticated(false); navigate('login') }
+  if (page === 'dashboard') return isAuthenticated ? <AppShell onLogout={signOut}><DashboardPage /></AppShell> : <LoginPage onLogin={signIn} onBack={() => navigate('landing')} />
+  if (page === 'login') return <LoginPage onLogin={signIn} onBack={() => navigate('landing')} />
+  return <LandingPage onLogin={() => navigate('login')} />
 }
