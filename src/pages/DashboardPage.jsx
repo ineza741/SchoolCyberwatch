@@ -1,5 +1,5 @@
-import PlaceholderPage from './PlaceholderPage'
+import { dashboardSummary, recentAlerts } from '../data/dashboardMock'
 
 export default function DashboardPage() {
-  return <PlaceholderPage eyebrow="School CyberWatch" title="Security overview" description="Your school security summary will appear here once the dashboard service is connected." />
+  return <div className="dashboard-page"><div className="dashboard-heading"><div><p>School CyberWatch</p><h1>Security overview</h1><span>Tuesday, 15 September</span></div><button type="button">View all alerts</button></div><section className="summary-grid">{dashboardSummary.map((item) => <article className={`summary-card ${item.tone}`} key={item.label}><span>{item.label}</span><strong>{item.value}</strong><i /></article>)}</section><section className="alerts-panel"><div className="panel-heading"><div><p>Latest activity</p><h2>Recent security alerts</h2></div><button type="button">Filter alerts</button></div><div className="alerts-table"><div className="table-row table-head"><span>Alert</span><span>Device</span><span>Severity</span><span>Time</span><span>Status</span></div>{recentAlerts.map((alert) => <div className="table-row" key={alert.id}><strong>{alert.name}</strong><span>{alert.device}</span><span><b className={`severity ${alert.severity.toLowerCase()}`}>{alert.severity}</b></span><span>{alert.time}</span><span><b className={`status ${alert.status.toLowerCase()}`}>{alert.status}</b></span></div>)}</div></section></div>
 }

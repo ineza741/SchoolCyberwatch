@@ -19,7 +19,7 @@ function NavIcon({ name }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>
 }
 
-export default function AppShell({ activePage, onNavigate, children }) {
+export default function AppShell({ activePage, onLogout, onToggleTheme, isDark, children }) {
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -31,7 +31,7 @@ export default function AppShell({ activePage, onNavigate, children }) {
               <button
                 className={`nav-item ${activePage === item.id ? 'active' : ''}`}
                 key={item.id}
-                onClick={() => onNavigate(item.id)}
+                onClick={() => undefined}
                 type="button"
               >
                 <NavIcon name={item.icon} />
@@ -40,13 +40,13 @@ export default function AppShell({ activePage, onNavigate, children }) {
             ))}
           </nav>
         </div>
-        <div className="profile-card">
+        <button className="profile-card" onClick={onLogout} type="button">
           <div className="profile-avatar">ICT</div>
           <div>
             <strong>School ICT staff</strong>
             <span>Administrator</span>
           </div>
-        </div>
+        </button>
       </aside>
       <main className="main-content">
         <header className="topbar">
@@ -55,7 +55,7 @@ export default function AppShell({ activePage, onNavigate, children }) {
             Secondary school workspace
             <span className="chevron">⌄</span>
           </button>
-          <button className="help-button" type="button" aria-label="Help">?</button>
+          <div className="top-actions"><button className="theme-switch" onClick={onToggleTheme} type="button">{isDark ? 'Light' : 'Dark'}</button><button className="help-button" type="button" aria-label="Help">?</button></div>
         </header>
         <section className="page-content">{children}</section>
       </main>
