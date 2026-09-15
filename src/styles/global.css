@@ -1,0 +1,33 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #263125;
+  background: #f4f7f6;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; }
+button { font: inherit; }
+
+.app-shell { min-height: 100vh; display: flex; background: #f4f7f6; }
+.sidebar { width: 258px; min-height: 100vh; background: #fff; border-right: 1px solid #e6ebea; padding: 28px 18px 20px; display: flex; flex-direction: column; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 10px; color: #263125; font-size: 19px; font-weight: 750; letter-spacing: -0.6px; padding: 0 10px 36px; }
+.brand-mark { width: 27px; height: 31px; background: #3c33fc; clip-path: polygon(50% 0, 94% 16%, 94% 54%, 50% 100%, 6% 54%, 6% 16%); display: grid; place-items: center; }
+.brand-mark span { width: 9px; height: 12px; border: 2px solid #fff; border-top: 0; border-radius: 0 0 6px 6px; }
+.nav-label { color: #9aa4a0; font-size: 11px; font-weight: 700; letter-spacing: 0.09em; margin: 0 10px 10px; text-transform: uppercase; }
+.nav-item { width: 100%; border: 0; background: transparent; color: #66716d; display: flex; align-items: center; gap: 13px; text-align: left; border-radius: 9px; padding: 12px 11px; cursor: pointer; margin: 2px 0; font-weight: 600; }
+.nav-item:hover { background: #f4f5ff; color: #3c33fc; }
+.nav-item.active { background: #eeedff; color: #3c33fc; }
+.nav-item svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.profile-card { border-top: 1px solid #edf0ef; padding: 20px 8px 0; display: flex; gap: 10px; align-items: center; }
+.profile-avatar { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; background: #e9f5e8; color: #3d7b39; font-size: 10px; font-weight: 800; }
+.profile-card strong, .profile-card span { display: block; }
+.profile-card strong { font-size: 12px; }.profile-card span { color: #8c9692; font-size: 11px; margin-top: 2px; }
+.main-content { flex: 1; min-width: 0; }
+.topbar { height: 78px; border-bottom: 1px solid #e6ebea; display: flex; align-items: center; justify-content: space-between; padding: 0 42px; background: rgba(255,255,255,0.66); }
+.school-selector, .help-button { border: 1px solid #e0e6e4; background: #fff; color: #53605b; border-radius: 8px; cursor: pointer; }
+.school-selector { padding: 9px 12px; font-size: 12px; font-weight: 650; display: flex; align-items: center; gap: 8px; }.selector-dot { width: 8px; height: 8px; border-radius: 50%; background: #27ac55; }.chevron { margin-left: 5px; font-size: 16px; line-height: 8px; }.help-button { width: 33px; height: 33px; font-weight: 800; }
+.page-content { max-width: 1200px; margin: 0 auto; padding: 66px 42px; }.page-intro { position: relative; }.page-intro p { color: #837bf9; font-size: 13px; font-weight: 750; margin: 0 0 10px; }.page-intro h1 { font-size: clamp(32px, 4vw, 46px); letter-spacing: -1.8px; margin: 0; color: #263125; }.phase-pill { position: absolute; right: 0; bottom: 7px; background: #e9f5e8; color: #367b36; padding: 6px 10px; border-radius: 99px; font-size: 12px; font-weight: 750; }
+.setup-card { background: #fff; border: 1px solid #e3e9e6; border-radius: 15px; margin-top: 44px; padding: 26px 28px; display: flex; gap: 17px; align-items: flex-start; box-shadow: 0 12px 35px rgba(45, 61, 53, 0.04); }.setup-icon { flex: 0 0 auto; width: 35px; height: 35px; border-radius: 11px; display: grid; place-items: center; background: #e9f5e8; color: #258447; font-weight: 900; }.setup-card h2 { font-size: 16px; margin: 1px 0 6px; }.setup-card p { color: #74807b; line-height: 1.55; font-size: 14px; margin: 0; max-width: 600px; }
+.preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 17px; margin-top: 25px; }.preview-card { min-height: 150px; background: #fff; border: 1px solid #e3e9e6; border-radius: 15px; padding: 22px; }.preview-card.wide { grid-column: span 2; }.preview-card span { color: #8c9692; font-size: 12px; font-weight: 700; }.preview-line { height: 11px; border-radius: 8px; background: #f0f2f1; margin-top: 24px; }.preview-line + .preview-line { margin-top: 13px; }.long { width: 78%; }.medium { width: 45%; }.preview-number { font-size: 34px; color: #d4d9d7; margin-top: 19px; font-weight: 700; }.preview-table { height: 62px; margin-top: 17px; border-radius: 8px; background: repeating-linear-gradient(to bottom, #f2f4f3 0 1px, transparent 1px 21px); }
+@media (max-width: 720px) { .sidebar { width: 72px; padding: 24px 10px 16px; }.brand { padding: 0 12px 30px; }.brand > span, .nav-label, .nav-item span, .profile-card > div:last-child { display: none; }.nav-item { justify-content: center; padding: 13px; }.profile-card { justify-content: center; padding: 18px 0 0; }.topbar { padding: 0 20px; }.school-selector { max-width: 215px; overflow: hidden; white-space: nowrap; }.page-content { padding: 42px 22px; }.phase-pill { position: static; display: inline-block; margin-top: 16px; }.preview-grid { grid-template-columns: 1fr; }.preview-card.wide { grid-column: span 1; } }
