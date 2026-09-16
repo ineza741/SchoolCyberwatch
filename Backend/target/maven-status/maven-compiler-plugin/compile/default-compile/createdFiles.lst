@@ -1,8 +1,16 @@
 com/schoolcyberwatch/dto/DashboardSummary.class
 com/schoolcyberwatch/controller/DashboardController.class
+com/schoolcyberwatch/repository/UserRepository.class
 com/schoolcyberwatch/dto/Alert.class
 com/schoolcyberwatch/dto/LoginResponse.class
 com/schoolcyberwatch/dto/LoginRequest.class
+com/schoolcyberwatch/security/SecurityConfig.class
+com/schoolcyberwatch/security/JwtUtil.class
+com/schoolcyberwatch/controller/LoginController.class
+com/schoolcyberwatch/config/DataInitializer.class
+com/schoolcyberwatch/entity/Role.class
+com/schoolcyberwatch/entity/User.class
+com/schoolcyberwatch/service/AuthService.class
 com/schoolcyberwatch/SchoolCyberWatchApplication.class
 com/schoolcyberwatch/config/WebConfig.class
-com/schoolcyberwatch/controller/LoginController.class
+com/schoolcyberwatch/security/JwtAuthFilter.class
