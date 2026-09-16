@@ -1,5 +1,30 @@
-import { dashboardSummary, recentAlerts } from '../data/dashboardMock'
+import { useState, useEffect } from 'react'
+import { getDashboardSummary, getAlerts } from '../services/api'
 
 export default function DashboardPage() {
-  return <div className="dashboard-page"><div className="dashboard-heading"><div><p>School CyberWatch</p><h1>Security overview</h1><span>Tuesday, 15 September</span></div><button type="button">View all alerts</button></div><section className="summary-grid">{dashboardSummary.map((item) => <article className={`summary-card ${item.tone}`} key={item.label}><span>{item.label}</span><strong>{item.value}</strong><i /></article>)}</section><section className="alerts-panel"><div className="panel-heading"><div><p>Latest activity</p><h2>Recent security alerts</h2></div><button type="button">Filter alerts</button></div><div className="alerts-table"><div className="table-row table-head"><span>Alert</span><span>Device</span><span>Severity</span><span>Time</span><span>Status</span></div>{recentAlerts.map((alert) => <div className="table-row" key={alert.id}><strong>{alert.name}</strong><span>{alert.device}</span><span><b className={`severity ${alert.severity.toLowerCase()}`}>{alert.severity}</b></span><span>{alert.time}</span><span><b className={`status ${alert.status.toLowerCase()}`}>{alert.status}</b></span></div>)}</div></section></div>
+  const [summary, setSummary] = useState([])
+  const [alerts, setAlerts] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [summaryData, alertsData] = await Promise.all([
+          getDashboardSummary(),
+          getAlerts()
+        ])
+        setSummary(summaryData)
+        setAlerts(alertsData)
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  if (loading) return <div>Loading dashboard...</div>
+
+  return <div className="dashboard-page"><div className="dashboard-heading"><div><p>School CyberWatch</p><h1>Security overview</h1><span>Tuesday, 15 September</span></div><button type="button">View all alerts</button></div><section className="summary-grid">{summary.map((item) => <article className={`summary-card ${item.tone}`} key={item.label}><span>{item.label}</span><strong>{item.value}</strong><i /></article>)}</section><section className="alerts-panel"><div className="panel-heading"><div><p>Latest activity</p><h2>Recent security alerts</h2></div><button type="button">Filter alerts</button></div><div className="alerts-table"><div className="table-row table-head"><span>Alert</span><span>Device</span><span>Severity</span><span>Time</span><span>Status</span></div>{alerts.map((alert) => <div className="table-row" key={alert.id}><strong>{alert.name}</strong><span>{alert.device}</span><span><b className={`severity ${alert.severity.toLowerCase()}`}>{alert.severity}</b></span><span>{alert.time}</span><span><b className={`status ${alert.status.toLowerCase()}`}>{alert.status}</b></span></div>)}</div></section></div>
 }
