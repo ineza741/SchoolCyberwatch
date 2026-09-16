@@ -19,7 +19,7 @@ function NavIcon({ name }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>
 }
 
-export default function AppShell({ activePage, onLogout, onToggleTheme, isDark, children }) {
+export default function AppShell({ activePage, onLogout, onToggleTheme, isDark, onNavigate, children }) {
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -31,7 +31,7 @@ export default function AppShell({ activePage, onLogout, onToggleTheme, isDark, 
               <button
                 className={`nav-item ${activePage === item.id ? 'active' : ''}`}
                 key={item.id}
-                onClick={() => undefined}
+                onClick={() => onNavigate(item.id)}
                 type="button"
               >
                 <NavIcon name={item.icon} />
