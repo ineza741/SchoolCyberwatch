@@ -19,7 +19,11 @@ function NavIcon({ name }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>
 }
 
-export default function AppShell({ activePage, onLogout, onToggleTheme, isDark, onNavigate, children }) {
+export default function AppShell({ activePage, onNavigate, user, onLogout, onToggleTheme, isDark, children }) {
+  const initials = user && user.fullName
+    ? user.fullName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+    : 'ICT'
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -40,11 +44,11 @@ export default function AppShell({ activePage, onLogout, onToggleTheme, isDark, 
             ))}
           </nav>
         </div>
-        <button className="profile-card" onClick={onLogout} type="button">
-          <div className="profile-avatar">ICT</div>
+        <button className="profile-card" onClick={onLogout} type="button" title="Sign out">
+          <div className="profile-avatar">{initials}</div>
           <div>
-            <strong>School ICT staff</strong>
-            <span>Administrator</span>
+            <strong>{user ? user.fullName : 'School ICT staff'}</strong>
+            <span>Administrator · Sign out</span>
           </div>
         </button>
       </aside>
@@ -55,7 +59,10 @@ export default function AppShell({ activePage, onLogout, onToggleTheme, isDark, 
             Secondary school workspace
             <span className="chevron">⌄</span>
           </button>
-          <div className="top-actions"><button className="theme-switch" onClick={onToggleTheme} type="button">{isDark ? 'Light' : 'Dark'}</button><button className="help-button" type="button" aria-label="Help">?</button></div>
+          <div className="top-actions">
+            <button className="theme-switch" onClick={onToggleTheme} type="button">{isDark ? 'Light' : 'Dark'}</button>
+            <button className="help-button" type="button" aria-label="Help">?</button>
+          </div>
         </header>
         <section className="page-content">{children}</section>
       </main>

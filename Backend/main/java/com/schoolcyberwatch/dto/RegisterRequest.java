@@ -1,26 +1,16 @@
 package com.schoolcyberwatch.dto;
 
 /**
- * Response body for POST /api/auth/login.
+ * Registration request for a new school ICT administrator account.
+ * Validated manually in AuthService to avoid extra dependencies.
  */
-public class LoginResponse {
+public class RegisterRequest {
 
-    private String token;
     private String email;
     private String fullName;
+    private String password;
 
-    public LoginResponse(String token, String email, String fullName) {
-        this.token = token;
-        this.email = email;
-        this.fullName = fullName;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
+    public RegisterRequest() {
     }
 
     public String getEmail() {
@@ -37,5 +27,13 @@ public class LoginResponse {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

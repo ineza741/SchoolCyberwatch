@@ -1,32 +1,47 @@
 import { API_BASE_URL } from '../config/api'
+import { clearStoredAuth, getAuthHeader } from './auth'
 
-const getToken = () => localStorage.getItem('token')
+/**
+ * Central API layer. Every backend call in the app goes through here:
+ * - attaches the JWT from services/auth.js
+ * - parses JSON
+ * - normalizes errors into Error objects with a friendly message
+ * - on 401 clears the stored session (caller decides to redirect)
+ */
+export async function apiRequest(path, { method = 'GET', body } = {}) {
+  let response
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    })
+  } catch {
+    throw new Error('Cannot reach the backend. Is the Spring Boot server running on port 8080?')
+  }
 
-const headers = () => ({
-  'Content-Type': 'application/json',
-  ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {})
-})
+  if (response.status === 401) {
+    clearStoredAuth()
+    const error = new Error('Your session has expired. Please sign in again.')
+    error.status = 401
+    throw error
+  }
 
-export const login = async (email, password) => {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
-  })
-  if (!response.ok) throw new Error('Invalid credentials')
-  const data = await response.json()
-  localStorage.setItem('token', data.token)
+  const data = await response.json().catch(() => null)
+  if (!response.ok) {
+    const error = new Error((data && data.error) || `Request failed (HTTP ${response.status})`)
+    error.status = response.status
+    throw error
+  }
   return data
 }
 
-export const getDashboardSummary = async () => {
-  const response = await fetch(`${API_BASE_URL}/dashboard/summary`, { headers: headers() })
-  if (!response.ok) throw new Error('Failed to fetch summary')
-  return response.json()
+/** Convenience GET wrapper. */
+export function apiGet(path) {
+  return apiRequest(path)
 }
 
-export const getAlerts = async () => {
-  const response = await fetch(`${API_BASE_URL}/dashboard/alerts`, { headers: headers() })
-  if (!response.ok) throw new Error('Failed to fetch alerts')
-  return response.json()
+/** Convenience POST wrapper. */
+export function apiPost(path, body) {
+  return apiRequest(path, { method: 'POST', body })
 }

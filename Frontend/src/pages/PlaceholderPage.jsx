@@ -4,7 +4,7 @@ export default function PlaceholderPage({ eyebrow, title, description }) {
       <div className="page-intro">
         <p>{eyebrow}</p>
         <h1>{title}</h1>
-        <span className="phase-pill">Phase 1</span>
+        <span className="phase-pill">In progress</span>
       </div>
       <section className="setup-card">
         <div className="setup-icon" aria-hidden="true">✓</div>

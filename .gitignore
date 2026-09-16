@@ -1,0 +1,19 @@
+# OS / editors
+Thumbs.db
+.DS_Store
+.idea/
+.vscode/
+
+# Local tooling (downloaded Maven, caches)
+tools/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+Backend/env.properties
+
+# Build output
+dist/
+target/
+node_modules/
