@@ -19,14 +19,16 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (userRepository.count() == 0) {
-            User admin = new User("admin@school.edu.rw", passwordEncoder.encode("admin123"), Role.ADMIN);
-            User staff = new User("staff@school.edu.rw", passwordEncoder.encode("staff123"), Role.ACADEMIC_STAFF);
-            
+        if (userRepository.findByEmail("admin").isEmpty()) {
+            User admin = new User("admin", passwordEncoder.encode("123"), Role.ADMIN);
             userRepository.save(admin);
+            System.out.println("Initialized database with default user (admin)");
+        }
+        
+        if (userRepository.findByEmail("staff@school.edu.rw").isEmpty()) {
+            User staff = new User("staff@school.edu.rw", passwordEncoder.encode("staff123"), Role.ACADEMIC_STAFF);
             userRepository.save(staff);
-            
-            System.out.println("Initialized database with default users (admin@school.edu.rw & staff@school.edu.rw)");
+            System.out.println("Initialized database with default user (staff@school.edu.rw)");
         }
     }
 }
