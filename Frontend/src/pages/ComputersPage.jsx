@@ -1,14 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { apiGet } from '../services/api'
-
-function formatTime(iso) {
-  if (!iso) return '—'
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return iso
-  return date.toLocaleString('en-GB', {
-    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
-  })
-}
+import { formatTime, orDash } from '../utils/format'
 
 export default function ComputersPage() {
   const [computers, setComputers] = useState([])
@@ -59,25 +51,34 @@ export default function ComputersPage() {
           </div>
         </div>
         <div className="alerts-table page-table">
-          <div className="table-row table-head table-5">
-            <span>Computer</span><span>IP address</span><span>Operating system</span><span>Agent status</span><span>Last seen</span>
+          <div className="table-row table-head table-6">
+            <span>Agent</span><span>Computer name</span><span>IP address</span><span>Agent status</span><span>Version</span><span>Last seen</span>
           </div>
           {loading && computers.length === 0 ? (
-            <div className="table-row table-5"><span>Loading computers…</span><span /><span /><span /><span /></div>
+            <div className="table-row table-6"><span>Loading computers…</span><span /><span /><span /><span /><span /></div>
           ) : !error && computers.length === 0 ? (
-            <div className="table-row table-5"><span className="empty-cell">No monitored computers found.</span><span /><span /><span /><span /></div>
+            <div className="table-row table-6"><span className="empty-cell">No monitored computers found.</span><span /><span /><span /><span /><span /></div>
           ) : (
-            computers.map((computer) => (
-              <div className="table-row table-5" key={computer.id}>
-                <strong>{computer.name}</strong>
-                <span>{computer.ip || '—'}</span>
-                <span>{computer.os}</span>
-                <span>
-                  <b className={`status ${computer.status === 'Online' ? 'online' : 'offline'}`}>{computer.status}</b>
-                </span>
-                <span>{formatTime(computer.lastSeen)}</span>
-              </div>
-            ))
+            computers.map((computer) => {
+              const online = ['active', 'online'].includes(String(computer.status || '').toLowerCase())
+              return (
+                <div className="table-row table-6" key={computer.id}>
+                  <strong>{computer.id ? `Agent ${computer.id}` : '—'}</strong>
+                  <span>
+                    {computer.name || '—'}
+                    <small className="alert-desc">{computer.os || ''}</small>
+                  </span>
+                  <span>{orDash(computer.ip)}</span>
+                  <span>
+                    <b className={`status ${online ? 'online' : 'offline'}`}>
+                      {computer.status || 'Unknown'}
+                    </b>
+                  </span>
+                  <span>{orDash(computer.version)}</span>
+                  <span>{formatTime(computer.lastSeen)}</span>
+                </div>
+              )
+            })
           )}
         </div>
       </section>

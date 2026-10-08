@@ -6,8 +6,22 @@ import { clearStoredAuth, getAuthHeader } from './auth'
  * - attaches the JWT from services/auth.js
  * - parses JSON
  * - normalizes errors into Error objects with a friendly message
- * - on 401 clears the stored session (caller decides to redirect)
+ * - on 401 clears the stored session and broadcasts an event so App
+ *   can redirect to login exactly once (no redirect loops)
  */
+
+const AUTH_EXPIRED_EVENT = 'scw:auth-expired'
+
+/** Let App know the JWT died so it can show the login page. */
+export function broadcastAuthExpired() {
+  window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT))
+}
+
+export function onAuthExpired(handler) {
+  window.addEventListener(AUTH_EXPIRED_EVENT, handler)
+  return () => window.removeEventListener(AUTH_EXPIRED_EVENT, handler)
+}
+
 export async function apiRequest(path, { method = 'GET', body } = {}) {
   let response
   try {
@@ -22,6 +36,7 @@ export async function apiRequest(path, { method = 'GET', body } = {}) {
 
   if (response.status === 401) {
     clearStoredAuth()
+    broadcastAuthExpired()
     const error = new Error('Your session has expired. Please sign in again.')
     error.status = 401
     throw error
@@ -29,7 +44,8 @@ export async function apiRequest(path, { method = 'GET', body } = {}) {
 
   const data = await response.json().catch(() => null)
   if (!response.ok) {
-    const error = new Error((data && data.error) || `Request failed (HTTP ${response.status})`)
+    const message = (data && (data.error || data.message)) || `Request failed (HTTP ${response.status})`
+    const error = new Error(message)
     error.status = response.status
     throw error
   }

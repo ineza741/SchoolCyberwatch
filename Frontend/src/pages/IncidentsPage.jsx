@@ -1,18 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { apiGet, apiPost } from '../services/api'
+import AlertDetailModal from '../components/AlertDetailModal'
+import { formatTime, formatTimeFull } from '../utils/format'
 
 const STATUS_OPTIONS = ['OPEN', 'INVESTIGATING', 'RESOLVED']
 const SEVERITY_OPTIONS = ['Low', 'Medium', 'High', 'Critical']
 const PREFILL_KEY = 'scw.prefillIncident'
 
-function formatTime(iso) {
-  if (!iso) return '—'
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return iso
-  return date.toLocaleString('en-GB', {
-    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
-  })
-}
+/** Backend's duplicate-protection message, shown verbatim to the admin. */
+const DUPLICATE_MESSAGE = 'An incident already exists for this security alert.'
 
 export default function IncidentsPage() {
   const [incidents, setIncidents] = useState([])
@@ -27,6 +23,7 @@ export default function IncidentsPage() {
   const [creating, setCreating] = useState(false)
   const [noteDrafts, setNoteDrafts] = useState({})
   const [busyId, setBusyId] = useState(null)
+  const [viewAlertId, setViewAlertId] = useState(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -82,7 +79,12 @@ export default function IncidentsPage() {
       setShowForm(false)
       await load()
     } catch (err) {
-      setFormError(err.message)
+      // HTTP 409: the backend prevents duplicate incidents per Wazuh alert.
+      if (err.status === 409) {
+        setFormError(DUPLICATE_MESSAGE)
+      } else {
+        setFormError(err.message || 'Could not create the incident.')
+      }
     } finally {
       setCreating(false)
     }
@@ -90,6 +92,7 @@ export default function IncidentsPage() {
 
   async function changeStatus(incident, status) {
     setBusyId(incident.id)
+    setError('')
     try {
       await apiPost(`/incidents/${incident.id}/status`, { status })
       await load()
@@ -104,6 +107,7 @@ export default function IncidentsPage() {
     const note = (noteDrafts[incident.id] || '').trim()
     if (!note) return
     setBusyId(incident.id)
+    setError('')
     try {
       await apiPost(`/incidents/${incident.id}/notes`, { note })
       setNoteDrafts((drafts) => ({ ...drafts, [incident.id]: '' }))
@@ -219,8 +223,18 @@ export default function IncidentsPage() {
                   <div>
                     <strong>{incident.title}</strong>
                     <small>
-                      {formatTime(incident.createdAt)} · {incident.computer || 'Unknown computer'}
-                      {incident.sourceAlertId ? ` · alert ${incident.sourceAlertId}` : ''}
+                      #{incident.id} · {formatTime(incident.createdAt)} · {incident.computer || 'Unknown computer'}
+                      {incident.sourceAlertId ? (
+                        <>
+                          {' · '}
+                          <button type="button" className="link-view-alert" onClick={() => setViewAlertId(incident.sourceAlertId)}>
+                            view source alert
+                          </button>
+                        </>
+                      ) : null}
+                      {incident.updatedAt && incident.updatedAt !== incident.createdAt
+                        ? ` · updated ${formatTimeFull(incident.updatedAt)}`
+                        : ''}
                     </small>
                   </div>
                   <div className="incident-badges">
@@ -248,7 +262,7 @@ export default function IncidentsPage() {
                     {incident.notes.map((note) => (
                       <li key={note.id}>
                         <span>{note.note}</span>
-                        <small>{note.author || 'ICT administrator'} · {formatTime(note.createdAt)}</small>
+                        <small>{note.author || 'ICT administrator'} · {formatTimeFull(note.createdAt)}</small>
                       </li>
                     ))}
                   </ul>
@@ -270,6 +284,10 @@ export default function IncidentsPage() {
           </div>
         )}
       </section>
+
+      {viewAlertId ? (
+        <AlertDetailModal alertId={viewAlertId} onClose={() => setViewAlertId(null)} />
+      ) : null}
     </div>
   )
 }

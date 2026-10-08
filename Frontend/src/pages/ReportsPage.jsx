@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { API_BASE_URL } from '../config/api'
 import { getAuthHeader } from '../services/auth'
+import { broadcastAuthExpired } from '../services/api'
 
 export default function ReportsPage() {
   const [days, setDays] = useState('30')
@@ -18,6 +19,7 @@ export default function ReportsPage() {
         headers: getAuthHeader(),
       })
       if (response.status === 401) {
+        broadcastAuthExpired()
         window.location.hash = '/login'
         return
       }
@@ -53,6 +55,7 @@ export default function ReportsPage() {
       })
       const data = await response.json().catch(() => ({}))
       if (response.status === 401) {
+        broadcastAuthExpired()
         window.location.hash = '/login'
         return
       }

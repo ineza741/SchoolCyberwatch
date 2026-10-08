@@ -6,6 +6,7 @@ const navigation = [
   { id: 'alerts', label: 'Security alerts', icon: 'shield' },
   { id: 'incidents', label: 'Incidents', icon: 'warning' },
   { id: 'reports', label: 'Reports', icon: 'report' },
+  { id: 'network', label: 'Network monitoring', icon: 'network' },
 ]
 
 function NavIcon({ name }) {
@@ -15,6 +16,7 @@ function NavIcon({ name }) {
     shield: <path d="M12 3 20 6v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-3Z" />,
     warning: <><path d="M10.3 4.4 3 17a2 2 0 0 0 1.7 3h14.6A2 2 0 0 0 21 17L13.7 4.4a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4M12 17h.01" /></>,
     report: <><path d="M6 3h9l3 3v15H6z" /><path d="M15 3v4h4M9 12h6M9 16h6" /></>,
+    network: <><circle cx="12" cy="5" r="2.2" /><circle cx="5" cy="19" r="2.2" /><circle cx="19" cy="19" r="2.2" /><path d="M12 7.2v4.3M12 11.5H6.8a1.8 1.8 0 0 0-1.8 1.8v3.5M12 11.5h5.2a1.8 1.8 0 0 1 1.8 1.8v3.5" /></>,
   }
   return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>
 }
@@ -29,6 +31,7 @@ export default function AppShell({ activePage, onNavigate, user, onLogout, onTog
       <aside className="sidebar">
         <div className="sidebar-top">
           <BrandMark />
+          <p className="brand-subtitle">Security Monitoring &amp; Incident Response</p>
           <nav aria-label="Main navigation">
             <p className="nav-label">Workspace</p>
             {navigation.map((item) => (
@@ -48,7 +51,7 @@ export default function AppShell({ activePage, onNavigate, user, onLogout, onTog
           <div className="profile-avatar">{initials}</div>
           <div>
             <strong>{user ? user.fullName : 'School ICT staff'}</strong>
-            <span>Administrator · Sign out</span>
+            <span>Administrator · Click to sign out</span>
           </div>
         </button>
       </aside>

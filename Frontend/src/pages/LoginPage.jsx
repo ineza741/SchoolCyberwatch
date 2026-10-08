@@ -2,7 +2,7 @@ import { useState } from 'react'
 import BrandMark from '../components/BrandMark'
 import { login, register } from '../services/auth'
 
-export default function LoginPage({ onLogin, onBack, onToggleTheme, isDark }) {
+export default function LoginPage({ onLogin, onBack, onToggleTheme, isDark, notice }) {
   const [mode, setMode] = useState('signin') // 'signin' | 'register'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -29,12 +29,10 @@ export default function LoginPage({ onLogin, onBack, onToggleTheme, isDark }) {
 
     setSubmitting(true)
     try {
-      if (mode === 'register') {
-        await register(email, fullName, password)
-      } else {
-        await login(email, password)
-      }
-      onLogin()
+      const auth = mode === 'register'
+        ? await register(email, fullName, password)
+        : await login(email, password)
+      onLogin(auth)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -104,6 +102,7 @@ export default function LoginPage({ onLogin, onBack, onToggleTheme, isDark }) {
             </label>
           ) : null}
           {error ? <p className="login-error" role="alert">{error}</p> : null}
+          {!error && notice ? <p className="session-notice" role="status">{notice}</p> : null}
           <button type="submit" disabled={submitting}>
             {submitting
               ? (mode === 'register' ? 'Creating account…' : 'Signing in…')
