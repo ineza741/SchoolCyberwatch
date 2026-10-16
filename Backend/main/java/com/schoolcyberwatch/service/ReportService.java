@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 /**
  * Builds the PDF security report:
@@ -30,25 +31,39 @@ public class ReportService {
             DateTimeFormatter.ofPattern("d MMM uuuu").withZone(ZoneId.systemDefault());
 
     private final WazuhService wazuhService;
+        private final AlertStatsService alertStatsService;
     private final IncidentRepository incidentRepository;
 
-    public ReportService(WazuhService wazuhService, IncidentRepository incidentRepository) {
+    public ReportService(WazuhService wazuhService,
+                                                 AlertStatsService alertStatsService,
+                         IncidentRepository incidentRepository) {
         this.wazuhService = wazuhService;
+                this.alertStatsService = alertStatsService;
         this.incidentRepository = incidentRepository;
     }
 
     /** Generates the PDF; daysBack defines the reporting period (default 30). */
     public byte[] generateSecurityReport(int daysBack) {
-        Instant since = Instant.now().minus(Duration.ofDays(Math.max(daysBack, 1)));
+                Instant until = Instant.now();
+                Instant since = until.minus(Duration.ofDays(Math.max(daysBack, 1)));
         String sinceIso = since.toString();
+                String untilIso = until.toString();
 
         // These calls throw WazuhUnavailableException (handled globally) when
         // the monitoring service is offline - the report needs live data.
         long computers = wazuhService.countAgents();
-        long failedLogins = wazuhService.countAlerts("60122", sinceIso);
-        long bruteForce = wazuhService.countAlerts("100200", sinceIso);
-        long fileModified = wazuhService.countAlerts("550", sinceIso);
-        long fileDeleted = wazuhService.countAlerts("553", sinceIso);
+        Map<String, Long> byType = alertStatsService.countByType(
+                wazuhService.countAlertsByRule(sinceIso, untilIso));
+        Map<String, Long> bySeverity = alertStatsService.countBySeverityLevel(
+                wazuhService.countAlertsByLevel(sinceIso, untilIso));
+        long failedLogins = byType.get("FAILED_LOGIN");
+        long bruteForce = byType.get("BRUTE_FORCE");
+        long fileModified = byType.get("FILE_MODIFIED");
+        long fileDeleted = byType.get("FILE_DELETED");
+        long malware = byType.get("MALWARE_DETECTED");
+        long networkConnections = byType.get("NETWORK_CONNECTION");
+        long networkScans = byType.get("NETWORK_SCAN");
+        long total = byType.values().stream().mapToLong(Long::longValue).sum();
 
         long open = incidentRepository.countByStatus(Incident.STATUS_OPEN);
         long investigating = incidentRepository.countByStatus(Incident.STATUS_INVESTIGATING);
@@ -66,7 +81,7 @@ public class ReportService {
 
             document.add(new Paragraph("School CyberWatch - Security Report", title));
             Paragraph period = new Paragraph(
-                    "Reporting period: " + DATE_FORMAT.format(since) + " to " + DATE_FORMAT.format(Instant.now()),
+                    "Reporting period: " + DATE_FORMAT.format(since) + " to " + DATE_FORMAT.format(until),
                     normal);
             period.setSpacingBefore(6);
             document.add(period);
@@ -90,21 +105,34 @@ public class ReportService {
             alertTable.addCell(cell(String.valueOf(fileModified)));
             alertTable.addCell(cell("Protected files deleted (rule 553)"));
             alertTable.addCell(cell(String.valueOf(fileDeleted)));
-            long total = failedLogins + bruteForce + fileModified + fileDeleted;
-            alertTable.addCell(cell("Total security alerts"));
+            alertTable.addCell(cell("Malware detections (rule 62123)"));
+            alertTable.addCell(cell(String.valueOf(malware)));
+            alertTable.addCell(cell("Network connections (rule 100300)"));
+            alertTable.addCell(cell(String.valueOf(networkConnections)));
+            alertTable.addCell(cell("Possible network scans (rule 100301)"));
+            alertTable.addCell(cell(String.valueOf(networkScans)));
+            alertTable.addCell(cell("Total monitored alerts"));
             alertTable.addCell(cell(String.valueOf(total)));
             document.add(alertTable);
 
             document.add(spacer());
             document.add(new Paragraph("3. Severity breakdown", heading));
             document.add(new Paragraph(
-                    "Critical (brute force): " + bruteForce
-                            + "   |   High (file integrity): " + (fileModified + fileDeleted)
-                            + "   |   Medium (failed logins): " + failedLogins,
+                    "Critical: " + bySeverity.get("Critical")
+                            + "   |   High: " + bySeverity.get("High")
+                            + "   |   Medium: " + bySeverity.get("Medium")
+                            + "   |   Low: " + bySeverity.get("Low"),
                     normal));
 
             document.add(spacer());
-            document.add(new Paragraph("4. Incident management", heading));
+            document.add(new Paragraph("4. Network monitoring (period)", heading));
+            document.add(new Paragraph(
+                    "Network connections (rule 100300): " + networkConnections
+                            + "   |   Possible network scans (rule 100301): " + networkScans,
+                    normal));
+
+            document.add(spacer());
+            document.add(new Paragraph("5. Incident management", heading));
             document.add(new Paragraph(
                     "Open incidents: " + open
                             + "   |   Investigating: " + investigating
@@ -112,11 +140,13 @@ public class ReportService {
                     normal));
 
             document.add(spacer());
-            document.add(new Paragraph("5. Security recommendations", heading));
+            document.add(new Paragraph("6. Security recommendations", heading));
             document.add(new Paragraph(
                     "- Review accounts with repeated failed logins and enforce strong passwords.\n"
                             + "- Keep automatic screen lock enabled on all school computers.\n"
                             + "- Restrict write access to the protected examinations folder.\n"
+                            + "- Keep Microsoft Defender real-time protection enabled and updated.\n"
+                            + "- Investigate repeated network authentication failures from the same source address.\n"
                             + "- Ensure every new school computer gets a Wazuh agent installed.\n"
                             + "- Open and resolve incidents promptly; document actions taken.",
                     normal));

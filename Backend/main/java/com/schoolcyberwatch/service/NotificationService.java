@@ -47,7 +47,7 @@ public class NotificationService {
         this.recipient = recipient;
     }
 
-    /** True for severities that must always notify (brute force etc.). */
+    /** True for severities that must always notify (brute force, malware, etc.). */
     public boolean shouldNotify(SecurityEvent event) {
         return "Critical".equalsIgnoreCase(event.getSeverity())
                 || "High".equalsIgnoreCase(event.getSeverity());
@@ -68,7 +68,16 @@ public class NotificationService {
             return;
         }
         try {
-            String subject = "School CyberWatch - Critical Security Alert";
+            String subject = switch (event.getType() == null ? "" : event.getType()) {
+                case "MALWARE_DETECTED" -> "School CyberWatch - Malware Detection Alert";
+                case "NETWORK" -> "School CyberWatch - Network Security Alert";
+                case "NETWORK_SCAN" -> "School CyberWatch - Possible Network Scan Alert";
+                case "NETWORK_CONNECTION" -> "School CyberWatch - Network Connection Alert";
+                case "BRUTE_FORCE" -> "School CyberWatch - Brute-Force Attack Alert";
+                case "FILE_MODIFIED", "FILE_DELETED" -> "School CyberWatch - File Integrity Alert";
+                case "FAILED_LOGIN" -> "School CyberWatch - Failed Login Alert";
+                default -> "School CyberWatch - Critical Security Alert";
+            };
             String body = buildBody(event);
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
@@ -121,8 +130,19 @@ public class NotificationService {
     }
 
     static String buildBody(SecurityEvent event) {
-        return String.format(
-                "Possible brute-force attack detected.%n%n"
+        String intro = switch (event.getType() == null ? "" : event.getType()) {
+            case "MALWARE_DETECTED" -> "School CyberWatch detected a malware-related security event.";
+            case "NETWORK" -> "School CyberWatch detected a network-related security event.";
+            case "NETWORK_SCAN" -> "School CyberWatch detected a possible network scan against a monitored computer.";
+            case "NETWORK_CONNECTION" -> "School CyberWatch recorded an inbound network connection on a monitored computer.";
+            case "BRUTE_FORCE" -> "Possible brute-force attack detected.";
+            case "FILE_MODIFIED" -> "A protected file was modified on a monitored computer.";
+            case "FILE_DELETED" -> "A protected file was deleted on a monitored computer.";
+            case "FAILED_LOGIN" -> "Repeated failed login attempts were detected.";
+            default -> "A security event was detected.";
+        };
+        StringBuilder body = new StringBuilder(String.format(
+                intro + "%n%n"
                         + "Computer: %s%n"
                         + "Severity: %s%n"
                         + "Time: %s%n"
@@ -133,6 +153,16 @@ public class NotificationService {
                 event.getSeverity(),
                 SecurityEventMapper.fullTime(event.getTimestamp()),
                 event.getRuleId(),
-                event.getDescription() == null ? "" : event.getDescription());
+                event.getDescription() == null ? "" : event.getDescription()));
+        // Real network context when the alert carries it (rules 100300/100301).
+        if (event.getSourceIp() != null) {
+            body.append(String.format("%n%nSource: %s", event.getSourceIp()));
+            if (event.getDestinationIp() != null) {
+                body.append(String.format(" -> Destination: %s", event.getDestinationIp()))
+                        .append(String.format(
+                                "%nIf this source address is unknown, block it at the school firewall."));
+            }
+        }
+        return body.toString();
     }
 }

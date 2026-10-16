@@ -1,6 +1,7 @@
 package com.schoolcyberwatch.exception;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -21,5 +22,11 @@ public class GlobalExceptionHandler {
                 .body(Map.of(
                         "error", "Security monitoring service temporarily unavailable.",
                         "detail", ex.getMessage() == null ? "" : ex.getMessage()));
+    }
+
+    @ExceptionHandler(IncidentConflictException.class)
+    public ResponseEntity<Map<String, String>> handleIncidentConflict(IncidentConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("error", ex.getMessage()));
     }
 }

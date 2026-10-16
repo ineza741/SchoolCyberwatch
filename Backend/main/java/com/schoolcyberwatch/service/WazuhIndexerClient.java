@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
@@ -27,7 +28,9 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Low-level client for the Wazuh Indexer (OpenSearch, port 9200).
@@ -96,7 +99,7 @@ public class WazuhIndexerClient {
     /** True when the indexer is reachable and credentials work. */
     public boolean isAvailable() {
         try {
-            search("wazuh-alerts-*", alertQuery(null, 1));
+            search("wazuh-alerts-*", alertQuery(null, null, 1));
             return true;
         } catch (WazuhUnavailableException e) {
             return false;
@@ -106,58 +109,162 @@ public class WazuhIndexerClient {
     /**
      * Searches the wazuh-alerts-* indices. Returns the raw alert _source
      * objects (newest first), or an empty list when nothing matched.
+     *
+     * @param ruleFilter comma-separated rule IDs (null/blank = any rule)
+     * @param sinceIso   lower timestamp bound (exclusive, may be null)
+     * @param untilIso   upper timestamp bound (inclusive, may be null)
+     * @param agentId    optional Wazuh agent id filter (e.g. "001")
+     * @param limit      maximum number of alerts to return
      */
+    public List<JsonNode> searchAlerts(String ruleFilter, String sinceIso, String untilIso,
+                                       String agentId, int limit) {
+        JsonNode response = search("wazuh-alerts-*",
+                alertQuery(ruleFilter, sinceIso, untilIso, agentId, limit));
+        return extractAlerts(response);
+    }
+
+    /** Convenience overload used by existing callers (no until/agent filter). */
     public List<JsonNode> searchAlerts(String ruleFilter, String sinceIso, int limit) {
-        JsonNode response = search("wazuh-alerts-*", alertQuery(ruleFilter, sinceIso, limit));
-        List<JsonNode> alerts = new ArrayList<>();
+        return searchAlerts(ruleFilter, sinceIso, null, null, limit);
+    }
+
+    /** Fetches a single alert by its indexer document id, or null if absent. */
+    public JsonNode fetchAlertById(String alertId) {
+        JsonNode response = search("wazuh-alerts-*", idQuery(alertId));
         JsonNode hits = response.path("hits").path("hits");
-        if (hits.isArray()) {
-            for (JsonNode hit : hits) {
-                JsonNode source = hit.path("_source");
-                if (source.isObject()) {
-                    alerts.add(source);
-                }
-            }
+        if (!hits.isArray() || hits.isEmpty()) {
+            return null;
         }
-        return alerts;
+        JsonNode hit = hits.get(0);
+        JsonNode source = hit.path("_source");
+        if (source.isObject()) {
+            ObjectNode copy = (ObjectNode) source.deepCopy();
+            String docId = hit.path("_id").asText(alertId);
+            copy.put("_id", docId);
+            return copy;
+        }
+        return source;
     }
 
     /** Total number of matching alerts (for count-style queries). */
-    public long countAlerts(String ruleFilter, String sinceIso) {
-        JsonNode response = search("wazuh-alerts-*", countQuery(ruleFilter, sinceIso));
+    public long countAlerts(String ruleFilter, String sinceIso, String untilIso, String agentId) {
+        JsonNode response = search("wazuh-alerts-*", countQuery(ruleFilter, sinceIso, untilIso, agentId));
         return response.path("hits").path("total").path("value").asLong(0);
+    }
+
+    /** Convenience overload used by existing callers. */
+    public long countAlerts(String ruleFilter, String sinceIso) {
+        return countAlerts(ruleFilter, sinceIso, null, null);
+    }
+
+    /**
+     * Counts matching alerts grouped by rule.id. Returns a map of
+     * ruleId (as string) -> count. Used by dashboard statistics.
+     */
+    public Map<String, Long> countAlertsByRule(String ruleFilter, String sinceIso, String untilIso) {
+        JsonNode response = search("wazuh-alerts-*",
+                countQuery(ruleFilter, sinceIso, untilIso, null, "rule.id"));
+        return readTermsAggregation(response);
+    }
+
+    /**
+     * Counts matching alerts grouped by rule.level. Returns a map of
+     * level (as string) -> count. Used by dashboard statistics.
+     */
+    public Map<String, Long> countAlertsByLevel(String ruleFilter, String sinceIso, String untilIso) {
+        JsonNode response = search("wazuh-alerts-*",
+                countQuery(ruleFilter, sinceIso, untilIso, null, "rule.level"));
+        return readTermsAggregation(response);
+    }
+
+    /**
+     * Counts matching alerts grouped by agent.name. Returns a map of
+     * agent name -> count, so callers can derive the number of distinct
+     * endpoints from the key set. Uses a terms aggregation with size 0 -
+     * alert rows are never downloaded to answer a count question.
+     */
+    public Map<String, Long> countAlertsByAgent(String ruleFilter, String sinceIso, String untilIso) {
+        JsonNode response = search("wazuh-alerts-*",
+                countQuery(ruleFilter, sinceIso, untilIso, null, "agent.name"));
+        return readTermsAggregation(response);
+    }
+
+    /** Counts matching alerts per calendar day in the system time zone. */
+    public Map<String, Long> countAlertsByDay(String ruleFilter, String sinceIso, String untilIso) {
+        JsonNode response = search("wazuh-alerts-*", dailyCountQuery(ruleFilter, sinceIso, untilIso));
+        return readDateHistogram(response);
     }
 
     // ------------------------------------------------------------------
     // query building + execution
     // ------------------------------------------------------------------
 
-    private static String alertQuery(String ruleFilter, String sinceIso, int limit) {
+    static String alertQuery(String ruleFilter, String sinceIso, String untilIso,
+                                     String agentId, int limit) {
         ObjectNode root = objectMapper().createObjectNode();
         root.put("size", Math.max(1, limit));
-        root.set("query", queryNode(ruleFilter, sinceIso));
+        root.set("query", queryNode(ruleFilter, sinceIso, untilIso, agentId));
         ArrayNode sort = root.putArray("sort");
         ObjectNode sortSpec = sort.addObject();
         sortSpec.putObject("timestamp").put("order", "desc");
         return toJson(root);
     }
 
-    private static String alertQuery(String ruleFilter, int limit) {
-        return alertQuery(ruleFilter, null, limit);
+    private static String alertQuery(String ruleFilter, String sinceIso, int limit) {
+        return alertQuery(ruleFilter, sinceIso, null, null, limit);
     }
 
-    private static String countQuery(String ruleFilter, String sinceIso) {
+    private static String countQuery(String ruleFilter, String sinceIso, String untilIso, String agentId) {
+        return countQuery(ruleFilter, sinceIso, untilIso, agentId, null);
+    }
+
+    static String countQuery(String ruleFilter, String sinceIso, String untilIso,
+                                     String agentId, String aggregationField) {
         ObjectNode root = objectMapper().createObjectNode();
         root.put("size", 0);
-        root.set("query", queryNode(ruleFilter, sinceIso));
+        root.put("track_total_hits", true);
+        root.set("query", queryNode(ruleFilter, sinceIso, untilIso, agentId));
+        if (aggregationField != null) {
+            root.putObject("aggs")
+                    .putObject("by_field")
+                    .putObject("terms")
+                    .put("field", aggregationField)
+                    .put("size", 50);
+        }
+        return toJson(root);
+    }
+
+    /** Finds a document by its Wazuh document id without relying on a wildcard _doc URL. */
+    static String idQuery(String alertId) {
+        ObjectNode root = objectMapper().createObjectNode();
+        root.put("size", 1);
+        ObjectNode ids = root.putObject("query").putObject("ids");
+        ids.putArray("values").add(alertId);
+        return toJson(root);
+    }
+
+    static String dailyCountQuery(String ruleFilter, String sinceIso, String untilIso) {
+        ObjectNode root = objectMapper().createObjectNode();
+        root.put("size", 0);
+        root.set("query", queryNode(ruleFilter, sinceIso, untilIso, null));
+        ObjectNode histogram = root.putObject("aggs")
+                .putObject("by_day")
+                .putObject("date_histogram");
+        histogram.put("field", "timestamp");
+        histogram.put("calendar_interval", "day");
+        histogram.put("time_zone", java.time.ZoneId.systemDefault().getId());
+        histogram.put("format", "yyyy-MM-dd");
+        histogram.put("min_doc_count", 0);
         return toJson(root);
     }
 
     /**
      * Builds the OpenSearch query: terms filter on rule.id (when given) and
-     * a range filter on timestamp (when sinceIso is given).
+     * range filters on timestamp (when since/until are given) and agent.id
+     * (when agentId is given).
      */
-    private static ObjectNode queryNode(String ruleFilter, String sinceIso) {
+    static ObjectNode queryNode(String ruleFilter, String sinceIso, String untilIso,
+                                        String agentId) {
         ObjectNode query = objectMapper().createObjectNode();
         ArrayNode must = query.putObject("bool").putArray("filter");
         if (ruleFilter != null && !ruleFilter.isBlank()) {
@@ -170,29 +277,89 @@ public class WazuhIndexerClient {
                 }
             }
         }
-        if (sinceIso != null && !sinceIso.isBlank()) {
-            must.addObject().putObject("range").putObject("timestamp")
-                    .put("gt", sinceIso)
-                    .put("format", "strict_date_optional_time"); // accepts 2026-09-15T15:03:46Z
+        if ((sinceIso != null && !sinceIso.isBlank())
+                || (untilIso != null && !untilIso.isBlank())) {
+            ObjectNode range = must.addObject().putObject("range").putObject("timestamp");
+            if (sinceIso != null && !sinceIso.isBlank()) {
+                range.put("gt", sinceIso);
+            }
+            if (untilIso != null && !untilIso.isBlank()) {
+                range.put("lte", untilIso);
+            }
+            range.put("format", "strict_date_optional_time"); // accepts 2026-09-15T15:03:46Z
+        }
+        if (agentId != null && !agentId.isBlank()) {
+            must.addObject().putObject("term").put("agent.id", agentId.trim());
         }
         return query;
     }
 
-    private JsonNode search(String index, String jsonBody) {
-        String url = properties.getBaseUrl() + "/" + index + "/_search";
+    static List<JsonNode> extractAlerts(JsonNode response) {
+        List<JsonNode> alerts = new ArrayList<>();
+        JsonNode hits = response.path("hits").path("hits");
+        if (hits.isArray()) {
+            for (JsonNode hit : hits) {
+                JsonNode source = hit.path("_source");
+                if (source.isObject()) {
+                    ObjectNode copy = (ObjectNode) source.deepCopy();
+                    String docId = hit.path("_id").asText(null);
+                    if (docId != null && !docId.isBlank()) {
+                        copy.put("_id", docId);
+                    }
+                    alerts.add(copy);
+                }
+            }
+        }
+        return alerts;
+    }
 
+    static Map<String, Long> readTermsAggregation(JsonNode response) {
+        Map<String, Long> counts = new LinkedHashMap<>();
+        JsonNode buckets = response.path("aggregations").path("by_field").path("buckets");
+        if (buckets.isArray()) {
+            for (JsonNode bucket : buckets) {
+                counts.put(bucket.path("key").asText(""), bucket.path("doc_count").asLong(0));
+            }
+        }
+        return counts;
+    }
+
+    static Map<String, Long> readDateHistogram(JsonNode response) {
+        Map<String, Long> counts = new LinkedHashMap<>();
+        JsonNode buckets = response.path("aggregations").path("by_day").path("buckets");
+        if (buckets.isArray()) {
+            for (JsonNode bucket : buckets) {
+                String day = bucket.path("key_as_string").asText(null);
+                if (day == null || day.isBlank()) {
+                    day = java.time.Instant.ofEpochMilli(bucket.path("key").asLong())
+                            .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toString();
+                }
+                counts.put(day, bucket.path("doc_count").asLong(0));
+            }
+        }
+        return counts;
+    }
+
+    private HttpHeaders basicAuthHeaders() {
         String basic = Base64.getEncoder().encodeToString(
                 (properties.getUsername() + ":" + properties.getPassword())
                         .getBytes(StandardCharsets.UTF_8));
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", "Basic " + basic);
+        return headers;
+    }
 
+    private JsonNode search(String index, String jsonBody) {
+        String url = properties.getBaseUrl() + "/" + index + "/_search";
         try {
             ResponseEntity<String> response = restTemplate.exchange(
-                    url, HttpMethod.POST, new HttpEntity<>(jsonBody, headers), String.class);
+                    url, HttpMethod.POST, new HttpEntity<>(jsonBody, basicAuthHeaders()), String.class);
             return objectMapper.readTree(response.getBody());
+        } catch (HttpClientErrorException.Unauthorized e) {
+            throw new WazuhUnavailableException(
+                    "Wazuh indexer rejected the credentials (check WAZUH_INDEXER_USERNAME / "
+                            + "WAZUH_INDEXER_PASSWORD).", e);
         } catch (ResourceAccessException e) {
             throw new WazuhUnavailableException(
                     "Wazuh indexer is unreachable at " + properties.getBaseUrl(), e);

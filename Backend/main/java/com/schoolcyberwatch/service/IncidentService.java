@@ -1,9 +1,11 @@
 package com.schoolcyberwatch.service;
 
 import com.schoolcyberwatch.dto.IncidentDto;
+import com.schoolcyberwatch.exception.IncidentConflictException;
 import com.schoolcyberwatch.model.Incident;
 import com.schoolcyberwatch.model.IncidentNote;
 import com.schoolcyberwatch.repository.IncidentRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,11 +42,14 @@ public class IncidentService {
         return new IncidentDto(incident);
     }
 
-    @Transactional
     public IncidentDto create(String title, String description, String severity,
                               String sourceAlertId, String computer) {
         if (title == null || title.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incident title is required.");
+        }
+        if (sourceAlertId != null && !sourceAlertId.isBlank()
+                && incidentRepository.existsBySourceAlertId(sourceAlertId)) {
+            throw new IncidentConflictException();
         }
         Incident incident = new Incident();
         incident.setTitle(title.trim());
@@ -53,7 +58,15 @@ public class IncidentService {
         incident.setSourceAlertId(sourceAlertId);
         incident.setComputer(computer);
         incident.setStatus(Incident.STATUS_OPEN);
-        return new IncidentDto(incidentRepository.save(incident));
+        try {
+            return new IncidentDto(incidentRepository.saveAndFlush(incident));
+        } catch (DataIntegrityViolationException e) {
+            if (sourceAlertId != null && !sourceAlertId.isBlank()
+                    && incidentRepository.existsBySourceAlertId(sourceAlertId)) {
+                throw new IncidentConflictException();
+            }
+            throw e;
+        }
     }
 
     /** Allowed transitions: OPEN -> INVESTIGATING -> RESOLVED (and back). */

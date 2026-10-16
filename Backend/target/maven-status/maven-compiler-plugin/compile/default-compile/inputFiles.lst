@@ -1,16 +1,49 @@
-/Users/fab/Desktop/School Capstone Project S/SchoolCyberwatch/Backend/main/java/com/schoolcyberwatch/repository/UserRepository.java
-/Users/fab/Desktop/School Capstone Project S/SchoolCyberwatch/Backend/main/java/com/schoolcyberwatch/SchoolCyberWatchApplication.java
-/Users/fab/Desktop/School Capstone Project S/SchoolCyberwatch/Backend/main/java/com/schoolcyberwatch/dto/LoginRequest.java
-/Users/fab/Desktop/School Capstone Project S/SchoolCyberwatch/Backend/main/java/com/schoolcyberwatch/dto/Alert.java
-/Users/fab/Desktop/School Capstone Project S/SchoolCyberwatch/Backend/main/java/com/schoolcyberwatch/controller/DashboardController.java
-/Users/fab/Desktop/School Capstone Project S/SchoolCyberwatch/Backend/main/java/com/schoolcyberwatch/controller/LoginController.java
-/Users/fab/Desktop/School Capstone Project S/SchoolCyberwatch/Backend/main/java/com/schoolcyberwatch/security/SecurityConfig.java
-/Users/fab/Desktop/School Capstone Project S/SchoolCyberwatch/Backend/main/java/com/schoolcyberwatch/dto/LoginResponse.java
-/Users/fab/Desktop/School Capstone Project S/SchoolCyberwatch/Backend/main/java/com/schoolcyberwatch/security/JwtAuthFilter.java
-/Users/fab/Desktop/School Capstone Project S/SchoolCyberwatch/Backend/main/java/com/schoolcyberwatch/config/WebConfig.java
-/Users/fab/Desktop/School Capstone Project S/SchoolCyberwatch/Backend/main/java/com/schoolcyberwatch/config/DataInitializer.java
-/Users/fab/Desktop/School Capstone Project S/SchoolCyberwatch/Backend/main/java/com/schoolcyberwatch/security/JwtUtil.java
-/Users/fab/Desktop/School Capstone Project S/SchoolCyberwatch/Backend/main/java/com/schoolcyberwatch/dto/DashboardSummary.java
-/Users/fab/Desktop/School Capstone Project S/SchoolCyberwatch/Backend/main/java/com/schoolcyberwatch/service/AuthService.java
-/Users/fab/Desktop/School Capstone Project S/SchoolCyberwatch/Backend/main/java/com/schoolcyberwatch/entity/User.java
-/Users/fab/Desktop/School Capstone Project S/SchoolCyberwatch/Backend/main/java/com/schoolcyberwatch/entity/Role.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\dto\LoginRequest.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\dto\NetworkEvent.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\service\ReportService.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\controller\EndpointsController.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\service\AlertStatsService.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\service\AuthService.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\controller\AlertsController.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\config\AdminBootstrap.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\dto\Alert.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\controller\HealthController.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\dto\EndpointInfo.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\config\WazuhIndexerProperties.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\model\User.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\config\WazuhProperties.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\exception\GlobalExceptionHandler.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\controller\DashboardController.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\service\NetworkMonitorService.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\service\IncidentService.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\dto\LoginResponse.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\repository\NotificationLogRepository.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\model\NotificationLog.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\dto\RegisterRequest.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\dto\SecurityEvent.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\model\Incident.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\model\IncidentNote.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\service\WazuhService.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\security\JwtService.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\config\AsyncConfig.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\controller\NetworkController.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\controller\NotificationController.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\dto\DashboardSummary.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\config\SecurityConfig.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\controller\ReportController.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\repository\UserRepository.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\service\SecurityEventMapper.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\service\WazuhIndexerClient.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\controller\LoginController.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\repository\IncidentNoteRepository.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\service\WazuhClient.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\config\WebConfig.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\security\JwtAuthenticationFilter.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\exception\WazuhUnavailableException.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\repository\IncidentRepository.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\security\AppUserDetailsService.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\dto\IncidentDto.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\controller\IncidentController.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\SchoolCyberWatchApplication.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\exception\IncidentConflictException.java
+C:\Users\Dell\Downloads\SchoolCyberwatch-main\SchoolCyberwatch-main\Backend\main\java\com\schoolcyberwatch\service\NotificationService.java

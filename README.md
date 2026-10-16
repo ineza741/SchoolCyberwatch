@@ -24,6 +24,8 @@ Flow: Windows school computers -> Wazuh agents -> Wazuh manager (192.168.56.101)
 | 100200| Brute-force attack       | Critical (+ email) |
 | 550   | Protected file modified  | High               |
 | 553   | Protected file deleted   | High               |
+| 62123 | Malware detected (Microsoft Defender) | Critical (+ email) |
+| Network | SSH activity + network logons (5710/5715/5720/576x/60118 + network-sourced 60122/100200) | Per rule level |
 
 ## Run the backend
 

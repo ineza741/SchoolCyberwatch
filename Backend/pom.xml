@@ -78,6 +78,7 @@
 
 	<build>
 		<sourceDirectory>main/java</sourceDirectory>
+		<testSourceDirectory>test/java</testSourceDirectory>
 		<resources>
 			<!-- Matches the team's non-standard layout: resources live next to main/java -->
 			<resource>

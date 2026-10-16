@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -19,7 +20,8 @@ import java.util.List;
  * Statuses: OPEN, INVESTIGATING, RESOLVED.
  */
 @Entity
-@Table(name = "incidents")
+@Table(name = "incidents", uniqueConstraints =
+    @UniqueConstraint(name = "uk_incidents_source_alert_id", columnNames = "source_alert_id"))
 public class Incident {
 
     public static final String STATUS_OPEN = "OPEN";

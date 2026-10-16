@@ -11,8 +11,8 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -74,7 +74,68 @@ public class NetworkMonitorService {
     }
 
     /** Small stats bundle for the Network Monitoring summary cards and PDF report. */
-    public record NetworkSummary(long totalEvents, long highSeverity, long affectedEndpoints) {
+    public record NetworkSummary(long totalEvents, long highSeverity, long affectedEndpoints,
+                                 int windowHours, String windowStart, String windowEnd,
+                                 String countType) {
+    }
+
+    /** The clearly defined counting window: the last {@code windowHours} hours. */
+    private record Window(String sinceIso, String untilIso) {
+    }
+
+    private Window currentWindow() {
+        Instant until = Instant.now();
+        return new Window(until.minus(Duration.ofHours(windowHours)).toString(), until.toString());
+    }
+
+    /**
+     * Counts for the Network Monitoring summary cards.
+     *
+     * Every value is an exact OpenSearch count/term aggregation with size 0
+     * over the same rules (100300, 100301) and the same rolling window as the
+     * dashboard's "Network alerts" card, so both screens quote the same
+     * definition. Alert rows are never fetched to produce a count - the
+     * bounded listing is only ever produced by {@link #getRecentEvents(int)}.
+     */
+    public NetworkSummary getSummary() {
+        Window window = currentWindow();
+        String rules = SCHOOL_NETWORK_RULES;
+
+        long total = indexerClient.countAlerts(rules, window.sinceIso, window.untilIso, null);
+
+        long high = 0L;
+        for (Map.Entry<String, Long> level : indexerClient
+                .countAlertsByLevel(rules, window.sinceIso, window.untilIso).entrySet()) {
+            if (isHighOrCritical(level.getKey())) {
+                high += level.getValue();
+            }
+        }
+
+        long endpoints = indexerClient.countAlertsByAgent(rules, window.sinceIso, window.untilIso).size();
+
+        return new NetworkSummary(total, high, endpoints, windowHours,
+                window.sinceIso, window.untilIso, "exact");
+    }
+
+    /**
+     * True when a rule.level aggregation key maps to the High or Critical
+     * band, using exactly the same mapper that grades individual events -
+     * so the high-severity card and the event list never disagree.
+     */
+    private static boolean isHighOrCritical(String levelKey) {
+        try {
+            String severity = SecurityEventMapper.severityFromLevel(Integer.parseInt(levelKey));
+            return "High".equalsIgnoreCase(severity) || "Critical".equalsIgnoreCase(severity);
+        } catch (NumberFormatException ex) {
+            // Ignore malformed aggregation keys rather than failing the page.
+            return false;
+        }
+    }
+
+    /** Exact dashboard count for the two School CyberWatch network rules. */
+    public long countSchoolNetworkAlerts() {
+        Window window = currentWindow();
+        return indexerClient.countAlerts(SCHOOL_NETWORK_RULES, window.sinceIso, window.untilIso, null);
     }
 
     /**
@@ -102,25 +163,6 @@ public class NetworkMonitorService {
             }
         }
         return events;
-    }
-
-    /** Counts for the Network Monitoring page cards and the PDF report. */
-    public NetworkSummary getSummary() {
-        List<NetworkEvent> events = getRecentEvents(1000);
-        long high = events.stream()
-                .map(NetworkEvent::getSeverity)
-                .filter(s -> "High".equalsIgnoreCase(s) || "Critical".equalsIgnoreCase(s))
-                .count();
-        Set<String> computers = new HashSet<>();
-        events.forEach(e -> computers.add(e.getComputer()));
-        return new NetworkSummary(events.size(), high, computers.size());
-    }
-
-    /** Exact dashboard count for the two School CyberWatch network rules. */
-    public long countSchoolNetworkAlerts() {
-        Instant until = Instant.now();
-        String sinceIso = until.minus(Duration.ofHours(windowHours)).toString();
-        return indexerClient.countAlerts(SCHOOL_NETWORK_RULES, sinceIso, until.toString(), null);
     }
 
     /**

@@ -2,19 +2,28 @@ package com.schoolcyberwatch.controller;
 
 import com.schoolcyberwatch.dto.SecurityEvent;
 import com.schoolcyberwatch.service.WazuhService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Security alerts page endpoint: real Wazuh events, transformed to the
- * simple School CyberWatch format, with basic filtering kept deliberately
- * simple (severity, type, computer text search) for the prototype.
+ * simple School CyberWatch format.
+ *
+ * Supported query parameters (all optional):
+ *   severity  Critical | High | Medium | Low
+ *   type      FAILED_LOGIN | BRUTE_FORCE | FILE_MODIFIED | FILE_DELETED |
+ *             MALWARE_DETECTED | NETWORK_CONNECTION | NETWORK_SCAN
+ *   ruleId    exact Wazuh rule id (e.g. 60122, 100301)
+ *   agent     Wazuh agent id (e.g. 001)
+ *   from/to   ISO-8601 timestamps bounding the query window
+ *   search    free text across computer, title, description, rule, user...
+ *   limit     maximum number of events (1..500, default 200)
  */
 @RestController
 @RequestMapping("/api/alerts")
@@ -30,38 +39,25 @@ public class AlertsController {
     public List<SecurityEvent> getAlerts(
             @RequestParam(required = false) String severity,
             @RequestParam(required = false) String type,
+            @RequestParam(required = false) String ruleId,
+            @RequestParam(required = false) String agent,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "200") int limit) {
 
-        List<SecurityEvent> events = wazuhService.getRecentAlerts(limit);
-        List<SecurityEvent> filtered = new ArrayList<>();
-
-        for (SecurityEvent event : events) {
-            if (severity != null && !severity.isBlank()
-                    && !event.getSeverity().equalsIgnoreCase(severity.trim())) {
-                continue;
-            }
-            if (type != null && !type.isBlank()
-                    && !event.getType().equalsIgnoreCase(type.trim())) {
-                continue;
-            }
-            if (search != null && !search.isBlank()) {
-                String needle = search.trim().toLowerCase(Locale.ROOT);
-                boolean matches =
-                        contains(event.getComputer(), needle)
-                                || contains(event.getTitle(), needle)
-                                || contains(event.getDescription(), needle)
-                                || contains(event.getRuleId(), needle);
-                if (!matches) {
-                    continue;
-                }
-            }
-            filtered.add(event);
-        }
-        return filtered;
+        WazuhService.AlertFilter filter = new WazuhService.AlertFilter(
+                type, severity, ruleId, agent, from, to, search, limit);
+        return wazuhService.getAlerts(filter);
     }
 
-    private static boolean contains(String value, String needle) {
-        return value != null && value.toLowerCase(Locale.ROOT).contains(needle);
+    /** Single alert by its Wazuh alert id. 404 when the id is unknown. */
+    @GetMapping("/{id}")
+    public ResponseEntity<SecurityEvent> getAlert(@PathVariable String id) {
+        SecurityEvent event = wazuhService.getAlertById(id);
+        if (event == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(event);
     }
 }
